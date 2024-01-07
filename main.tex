@@ -1,0 +1,109 @@
+\documentclass[12pt]{article}
+\linespread{1.6}
+
+\usepackage{amssymb,amsfonts,amsmath,mathtext}
+\usepackage{graphicx}
+\graphicspath{{images/}}
+\usepackage{indentfirst}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage{comment}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=cyan,   
+    urlcolor=blue,
+    pdftitle={Проект 1673 Отчет №1},
+    pdfpagemode=FullScreen,
+    }
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{hyphenat}
+\usepackage{cite,enumerate}
+\usepackage[russian,english]{babel}
+\usepackage{mathtools}
+\usepackage{physics}
+
+%\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage[%
+    left=2.0in,%
+    right=1.0in,%
+    top=2.0in,%
+    bottom=2.0in,%
+    %paperheight=11in,%
+    %paperwidth=8.5in%
+]{geometry}%
+
+%\usepackage[document]{ragged2e}
+\emergencystretch=4em
+
+%\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+%\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+
+\DeclareUnicodeCharacter{2212}{\textendash} %чтоб input был корректный
+
+% формулы нумеруются внутри каждой главы
+%\numberwithin{equation}{chapter}
+
+% Заменяем библиографию с квадратных скобок на точку:
+%\makeatletter
+%\renewcommand{\@biblabel}[1]{#1.} 
+%\makeatother
+
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\textwidth}{1in}
+
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1in}
+
+\newtheorem{definition}{Определение}
+%-----------------------------------------------------------
+
+\begin{document}
+\input{sections/01-Титульный лист}
+%\input{sections/Аннотация (доп)}
+\renewcommand{\contentsname}{Содержание}
+\tableofcontents
+\clearpage
+%\listoffigures
+%\clearpage
+%\listoftables %remove this line if you do not have any tables
+%\clearpage
+
+\renewcommand{\figurename}{Рисунок}
+
+\pagenumbering{arabic}
+\input{sections/02-Цели и задачи}
+\input{sections/03-Сокращения}
+\input{sections/04-Термины}
+\input{sections/05-Вступление}
+\section{Выполнение работы}
+\input{sections/06-Критерии}
+\input{sections/06-ПомехоустКод}
+\input{sections/06-Решетки}
+\input{sections/06-Скрытые}
+\input{sections/06-Хэши}
+\clearpage
+\input{sections/07-Заключение}
+
+%\section{Список использованных источников информации}
+
+%\clearpage
+
+%\input{sections/08-Приложения}
+
+%\newrefcontext[sorting=ntvy]
+%\printbibliography[env=gostbibliography]
+%\addcontentsline{toc}{chapter}{bibname}
+\renewcommand{\refname}{Список использованных источников информации}
+\addcontentsline{toc}{section}{Список использованных источников информации}
+%\bibliographystyle{gost780s}
+%\bibliographystyle{utf8gost705u}
+\bibliographystyle{unsrt}
+\bibliography{refs}{}
+\end{document}

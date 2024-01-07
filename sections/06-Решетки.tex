@@ -1,0 +1,309 @@
+\subsection{Целочисленные решётки}
+Следующим классом рассматриваемых нами криптографических систем являются системы, в основе которых лежат целочисленные решётки.
+
+Существуют два определения целочисленных решёток. Для полноты приведём их оба:
+
+\begin{definition}[Целочисленная решётка (векторы)\cite{Lattices-1}]
+Целочисленная решётка -- это комбинация линейно независимых векторов
+\begin{equation}
+    \Bigl\{ \sum_{i=1}^{k}\lambda_i \vec{b_i} \mid \lambda_1, \ldots , \lambda_k \in \mathbb{Z} \Bigr\},
+\end{equation}
+где $\vec{b_1},\ldots,\vec{b_k} \in \mathbb{R}^n$ -- $k$ линейно независимых векторов длины $n$.
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[Целочисленная решётка (подмножество)\cite{lattice_problems}]
+$n$-мерная целочисленная решётка $\cal L$ -- это подмножество $\mathbb{R}^n$ такое, что:
+\begin{enumerate}
+    \item Является аддитивной подгруппой: $0 \in \cal L$ и $-x,x+y \in \cal L$ для каждого $x, y \in \cal L$;
+    \item Дискретно: каждый $x \in \cal L$ имеет область вокруг себя в $\mathbb{R}^n$ в которой $x$ -- единственная точка решётки.
+\end{enumerate}
+\end{definition}
+
+На основе структуры целочисленных решёток существует несколько математических задач, обеспечивающих сложность криптоанализа построенных на них криптографических алгоритмов\cite{lattice_problems}:
+\begin{itemize}
+    \item <<Learning With Errors (LWE)>> -- обучение с ошибками,
+    \item <<The Short Integer Solution problem (SIS)>> -- задача поиска ближайшего решения,
+    \item <<The Search-LWE problem>> -- задача поиска вектора-секрета,
+    \item <<The Decision-LWE problem>> -- задача определения способа создания пары,
+    \item <<The Module-SIS problem>> -- задача поиска ближайшего решения над множеством действительных чисел,
+    \item <<The decisional Module-LWE problem>> -- задача определения способа создания пары над множеством действительных чисел.
+\end{itemize}
+На данный момент они представляют интерес для криптографии, так как считаются достаточно криптостойкими\cite{Kyber-DOC}, чтобы противостоять атакам с применением квантового компьютера.
+
+Далее перечисленные задачи описываются подробно.
+\subsubsection{Задачи целочисленных решёток}
+
+Сначала введём несколько вспомогательных определений.
+
+Во-первых, будем говорить, если $\vb*{\vec{a} \in \mathbb{Z}_q^n}$, значит вектор $\vec{a}$ содержит $n$ целочисленных элементов $(a_1, a_2, \ldots, a_n)$, причём каждый элемент выбран по модулю $q$. Также будем говорить, что вектор $\vec{a}$ равномерно случайный, если каждый из элементов выбран в соответствии с равномерным дискретным случайным распределением, то есть каждое из значений $a_i=\overline{0, q-1}$ равновероятно.
+
+Во-вторых, будем говорить, что набор векторов $\{\vec{a_i}\} \in A$ выбран равномерным случайным распределением, подразумевая равномерное дискретное случайное распределение. То есть попадание каждого вектора $a_i$ из $A$ в выборку $\{\vec{a_i}\}$ равновероятно.
+
+В-третьих, определим понятие $\textbf{нормы}$\cite{vec_norm}. Пусть вещественному или комплексному $n$-мерному вектору $\vec{x} = (x_1 , \ldots, x_n)^T$ (T -- операция транспонирования) поставлено в соответствие вещественное число $\norm{\vec{x}}$, такое, что выполнены следующие аксиомы:
+\begin{itemize}
+    \item $\norm{\vec{x}} > 0$, если $\vec{x} \neq 0, \norm{\vec{0}} = 0$;
+    \item $\norm{\alpha \vec{x}} = \bmod{\alpha} \norm{\vec{x}}$ -- аксиома абсолютной однородности;
+    \item $\norm{\vec{x}+\vec{y}} \leq \norm{\vec{x}} + \norm{\vec{y}}$ -- аксиома (неравенство) треугольника
+\end{itemize}
+для любого числа $\alpha$ и любого $n$-мерного вектора $\vec{y}$. Тогда число $\norm{\vec{x}}$ называется нормой вектора $\vec{x}$. Далее будет использоваться \textbf{евклидова норма (норма $l_2$, или 2-я норма)}, которая вычисляется как
+\[
+\norm{\vec{x}}=\abs{(\vec{x},\vec{x})}=\abs{\vec{x}^T\vec{x}}=\biggl( \sum_{i=1}^{n}\vec{x}_i^2 \biggr)^{\frac{1}{2}},
+\]
+где $(\vec{x},\vec{x})$ -- скалярное произведение, $\vec{x}^T\vec{x}$ -- скалярное произведение.
+
+В-четвёртых, упомянем дискретный Гауссиан:
+\begin{definition}[Дискретный Гауссиан]
+Пусть $\mu,\sigma \in \mathbb{R}, \sigma > 0$. Дискретное Гауссовское распределение с положением $\mu$ и размером $\sigma$ обозначается ${\cal N_{\mathbb{Z}}} (\mu,\sigma^2)$ и определяется как
+\[
+\forall x \in \mathbb{Z}, \underset{X\leftarrow {\cal N_{\mathbb{Z}}} (\mu, \sigma^{2} )}{\mathbb{P}} [X=x] = \frac{e^{-(x-\mu)^2/2\sigma^2}}{\sum_{y\in \mathbb{Z}} e^{-(y-\mu)^2/2\sigma^2}}
+\]
+Далее будет подразумеваться упрощённая форма:, что $\mu = 0, 2\sigma^2 = r$, а $x$ выбирается не из множества целых чисел, а из целочисленной решётки. \cite{Discrete_Gaussian}
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The Short Integer Solution problem (SIS)]
+Даны $m$ равномерно случайных векторов $a_i\in\mathbb{Z}_q^n$, составляющие столбцы матрицы $A\in\mathbb{Z}_q^{n\times m}$. Найти ненулевой вектор с целочисленными координатами $\vec{z}\in\mathbb{Z}^m$ с нормой $\norm{\vec{z}}\leq\beta$ такой, что:
+\begin{equation}
+    f_A(z):=\sum_{i} a_i \cdot z_i=0\in\mathbb{Z}_q^n,
+    %f_A(z)\coloneqqAz=\sum_{i} a_i \cdot z_i=0\in\mathbb{Z}_q^n,
+\end{equation}
+где $\beta < q$.
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The LWE distribution]
+Выберем вектор $\vec{s}\in\mathbb{Z}_q^n$, назовём его \textbf{секретом}. Рассмотрим также:
+\begin{itemize}
+    \item некоторое множество целочисленных векторов $\vec{a}\in\mathbb{Z}_q^n$ длины $n$, выбранных равномерным случайным распределением из множества всех векторов $\mathbb{Z}_q^n\times\mathbb{Z}_q^{q^n}$ длины $n$;
+    \item некоторое распределение $\chi$, в качестве которого обычно выбирается дискретный Гауссиан ширины $\alpha q, \alpha < 1$, описанный выше;
+    \item множество значений ошибок $\{e\} \leftarrow \chi$ каждая из которых соответствует своему вектору $e_i \longleftrightarrow \vec{a_i}$.
+\end{itemize}
+Тогда LWE-распределением $A_{s,\chi}$ будет называться множество пар длины $n+1$, сформированных правилу
+\begin{equation}
+    (\vec{a_i},b = \langle \vec{s}, \vec{a_i}\rangle + e_i \bmod q),
+\end{equation}
+где $\langle\vec{\alpha},\vec{\beta}\rangle = \sum_{i}\alpha_i\cdot\beta_i$.
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The Search-LWE problem]
+Дано $m$ независимых наборов пар $(\vec{a_i}, b_i) \in \mathbb{Z}_q^{n+1} \times \mathbb{Z}_q^m$, 
+выбранных равномерным случайным распределением из $A_{s,\chi}$. Необходимо найти
+вектор-секрет $\vec{s}$.
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The Decision-LWE problem]
+Дано $m$ независимых наборов пар $(\vec{a_i}, b_i) \in \mathbb{Z}_q^{n+1} \times \mathbb{Z}_q^m$, выбранных равномерным случайным распределением. Необходимо отличить независимо для каждой пары, как она была выбрана: либо из LWE-распределения $A_{s,\chi}$, либо равномерно случайно из множества всех целочисленных векторов $\mathbb{Z}_q^n\times\mathbb{Z}_q^{q^n}$.
+\end{definition}
+
+На практике в основе алгоритмов, прошедших 3-й раунд конкурса NIST и выбранных для стандартизации, используются модификации задач SIS и Decision-LWE, определённые на множестве вещественных чисел \cite{NIST_3-rd}:
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The Module-SIS problem]
+Даны $m$ равномерно случайных векторов $a_i\in\mathbb{R}_q^n$, составляющие столбцы матрицы $A\in\mathbb{R}_q^{n\times m}$. Найти ненулевой вектор с целочисленными координатами $\vec{z}\in\mathbb{R}^m$ с нормой $\norm{\vec{z}}\leq\beta$ такой, что:
+\begin{equation}
+    f_A(z)\coloneqq Az=\sum_{i} a_i \cdot z_i=0\in\mathbb{R}_q^n,
+\end{equation}
+где $\beta < q$.
+\end{definition}
+
+%\newtheorem{definition}{Определение}
+\begin{definition}[The decisional Module-LWE problem]
+Дано $m$ независимых наборов пар $(\vec{a_i}, b_i) \in \mathbb{R}_q^{n+1} \times \mathbb{R}_q^m$, выбранных равномерным случайным распределением. Необходимо отличить независимо для каждой пары, как она была выбрана: либо из LWE-распределения $A_{s,\chi}$, либо равномерно случайно из множества всех целочисленных векторов $\mathbb{R}_q^n\times\mathbb{R}_q^{q^n}$.
+\end{definition}
+
+\subsubsection{CRYSTALS-Kyber}
+Единственным финалистом, построенным на целочисленных решётках и выбранным конкурсом NIST для стандартизации на данный момент является криптосистема CRYSTALS-Kyber. Данный выбор обусловлен сочетанием таких факторов, как высокий уровень безопасности и одни из лучших показателей по скорости генерации ключа, инкапсуляции и декапсуляции, а также использованию ресурсов\cite{NIST_3-rd}. CRYSTALS-Kyber относится к классу KEM криптографических систем. В основе её стойкости лежит задача Module-LWE, описанная выше\cite{Kyber-DOC}.
+
+CRYSTALS-Kyber имеет несколько режимов работы и поддерживает 1-й (AES-128), 3-й (AES-192) и 5-й
+(AES-256) уровни защищённости\cite{CRYSTALS-Kyber}.
+
+Основными параметрами криптосистемы являются значения:
+\begin{itemize}
+    \item n -- степень неприводимого многочлена многочлена циклотомического кольца $R=\mathbb{Z}[X]/(X^{n}+1)$; 
+    \item n' -- определяет значение n как $n=2^{n'-1}$;
+    \item k -- определяет размерность публичной матрицы полиномов как $A\in\mathbb{R}_q^{k\times k}$;
+    \item q -- целочисленный модуль коэффициентов;
+    \item $\chi$ -- некоторое случайное распределение;
+\end{itemize}
+После задания ключевых параметров происходит псевдослучайная генерация матрицы $A\in\mathbb{R}_q^{k\times k}$, а также генерация векторов $\vec{s},\vec{e}\in\mathbb{R}_q^k$ независимо из распределения $\chi$. Вектор $\vec{s}$ будем называть <<секретом>>, а вектор $\vec{e}$ <<вектором ошибки>>. Они вместе с матрицей $A$ формируют открытый ключ:
+\[
+pk\coloneqq(A_{k \times k},\vec{b})\coloneqq(A_{k \times k},A_{k \times k} \vec{s} + \vec{e})
+\]
+
+Для зашифрования 256-битовой строки сообщения $m$ первая из устанавливающих друг с другом связь сторон независимо генерирует в соответствии с распределением $\chi$ векторы 
+$\vec{r},\vec{e_1}\in\mathbb{R}_q^k$ и ошибку $e_2\in\mathbb{R}_q$. Для шифрования производим следующую операцию:
+\[
+\vec{c}\coloneqq(\vec{c_1}, \vec{c_2})\coloneqq(\vec{r} \vec{A} + \vec{e_1}, \vec{r} \vec{b} + e_2 + \biggl\lceil\frac{q}{2}\biggl\rfloor \cdot m) \in \mathbb{R}_q^{2k} \times \mathbb{R}_q^m,
+\]
+где $\bigl\lceil\frac{q}{2}\bigl\rfloor \cdot m$ следует интерпретировать как вектор коэффициентов многочлена в $\mathbb{R}_q$
+
+Для расшифрования необходимо вычислить промежуточное значение $\nu=c_2-c_1s$, округлить каждый
+коэффициент в полученном полиноме по модулю 2, что извлечёт переданную битовою строку сообщения m\cite{NIST_3-rd}.
+
+Рассмотрим реализацию CRYSTALS-Kyber на псевдокоде. В описании будут использоваться несколько вспомогательных функций, которые не будут приведены алгоритмически:
+\begin{itemize}
+    \item PRF: фкнкиця, генерирующая псевдослучайную байтовую последовательность ${\cal B}^32 \times {\cal B} \rightarrow {\cal B}^*$;
+    \item XOF: расширяемая функция вывода ${\cal B}^* \times {\cal B} \times {\cal B} \rightarrow {\cal B}^*$;
+    \item H: хеш функция ${\cal B}^* \rightarrow {\cal B}^{32}$;
+    \item G: хеш функция ${\cal B}^* \rightarrow {\cal B}^{32} \times {\cal B}^{32}$;
+    \item KDF: функция вывода ключа ${\cal B}^* \rightarrow {\cal B}^*$
+    \item NTT (теоретико-числовое преобразование): функция преобразования для ускорения операции умножения. Пусть $R_q$ -- кольцо классов вычетов $\mathbb{Z}_q[X]/(X^n+1)$, где $n=2^{n'-1}$, $n = 256, n' = 9, q = 3329$. Пусть также $f \in R_q$ -- вектор из 128 многочленов первой степени. Определим $\zeta = 17$ как примитивный элемент. Тогда многочлен $X^{256} + 1$ может быть записан как
+    \[
+    X^{256} + 1 = \prod_{i=0}^{127}(X^2 - \zeta^{2i+1}) = \prod_{i=0}^{127}(X^2 - \zeta^{2br_7(i)+1}),
+    \]
+    где $br_7(i)$ для $i = 0, \ldots, 127$ -- инверсия разрядов 7-ми битного числа $i$. Определим $\hat{f}_i$ как 
+    \[
+    \hat{f}_{2i} \sum_{j=0}^{127} f_{2j} \zeta^{(2br_7(i)+1)j}, 
+    \]
+    \[
+    \hat{f}_{2i+1} \sum_{j=0}^{127} f_{2j+1} \zeta^{(2br_7(i)+1)j},
+    \]
+    а функцию $\text{NTT}(f)$ как
+    \[
+    \text{NTT}(f) = \hat{f} = \hat{f}_0 + \hat{f}_1X + \ldots + \hat{f}_{255}X^{255}.
+    \]
+\end{itemize}
+
+\begin{algorithm}[H]
+\caption{Генерация ключа}\label{alg:Example}
+\textbf{Ввод:} Приватный ключ $sk \in {\cal B}^{12 \cdot k \cdot n / 8}$\\
+\textbf{Вывод:} $\text{Публичный ключ } pk \in {\cal B}^{12 \cdot k \cdot n / 8 + 32}$
+\begin{algorithmic}[1]
+\State $d \gets {\cal B}^{32}$
+\State $(\rho, \sigma) \coloneqq G(d)$
+\State $N \coloneqq 0$
+\For{$i$ from $0$ to $k-1$}
+\Comment{Генерация матрицы $\hat{A} \in \mathbb{R}^{k \times k}$ в формате NTT\cite{Kyber-DOC}}
+    \For{$j$ from $0$ to $k-1$}
+        \State $\hat{A}[i][j] \coloneqq \text{Parse}(\text{XOF}(\rho, j, i))$
+    \EndFor
+\EndFor
+\For{$i$ from $0$ to $k-1$}
+\Comment{Выбор $s \in \mathbb{R}_q^k$ из ${\cal B}_{\eta_1}$}
+    \State $s[i] \coloneqq \text{CBD}_{\eta_1}(\text{PRF}(\sigma, N))$
+    \State $N \coloneqq N + 1$
+\EndFor
+\For{$i$ from $0$ to $k-1$}
+\Comment{Выбор $e \in \mathbb{R}_q^k$ из ${\cal B}_{\eta_1}$}
+    \State $e[i] \coloneqq {\text{CBD}}_{\eta_1}(\text{PRF}(\sigma, N))$
+    \State $N \coloneqq N + 1$
+\EndFor
+\State $\hat{s} \coloneqq \text{NTT}(s)$
+\State $\hat{e} \coloneqq \text{NTT}(e)$ 
+\State $\hat{t} \coloneqq \hat{A} \circ \hat{s} + \hat{e}$ 
+\State $pk \coloneqq (\text{Encode}_{12}(\hat{t} \text{ mod}^{+} q) || \rho)$
+\Comment{$pk \coloneqq A_{k \times k} \vec{s} + \vec{e}$}
+\State $sk \coloneqq \text{Encode}_{12}(\hat{s} \text{ mod}^{+} q)$
+\Comment{$sk \coloneqq \vec{s}$}
+\State \Return $(pk,sk)$
+\end{algorithmic}
+\end{algorithm}
+\newpage
+
+\begin{algorithm}[H]
+\caption{Зашифрование}\label{alg:Example}
+\textbf{Ввод:} Приватный ключ $sk \in {\cal B}^{12 \cdot k \cdot n / 8}$\\
+\textbf{Вывод:} Публичный ключ $pk \in {\cal B}^{12 \cdot k \cdot n / 8 + 32}$
+\begin{algorithmic}[1]
+\State $d \gets {\cal B}^{32}$
+\State $(\rho, \sigma) \coloneqq G(d)$
+\State $N \coloneqq 0$
+\For{$i$ from $0$ to $k-1$}
+\Comment{Генерация матрицы $\hat{A} \in \mathbb{R}^{k \times k}$ в формате NTT\cite{Kyber-DOC}}
+    \For{$j$ from $0$ to $k-1$}
+        \State $\hat{A}[i][j] \coloneqq \text{Parse}(\text{XOF}(\rho, j, i))$
+    \EndFor
+\EndFor
+\For{$i$ from $0$ to $k-1$}
+\Comment{Выбор $s \in \mathbb{R}_q^k$ из ${\cal B}_{\eta_1}$}
+    \State $s[i] \coloneqq {\text{CBD}}_{\eta_1}(\text{PRF}(\sigma, N))$
+    \State $N \coloneqq N + 1$
+\EndFor
+\For{$i$ from $0$ to $k-1$}
+\Comment{Выбор $e \in \mathbb{R}_q^k$ из ${\cal B}_{\eta_1}$}
+    \State $e[i] \coloneqq {\text{CBD}}_{\eta_1}(\text{PRF}(\sigma, N))$
+    \State $N \coloneqq N + 1$
+\EndFor
+\State $\hat{s} \coloneqq \text{NTT}(s)$
+\State $\hat{e} \coloneqq \text{NTT}(e)$ 
+\State $\hat{t} \coloneqq \hat{A} \circ \hat{s} + \hat{e}$ 
+\State $pk \coloneqq (\text{Encode}_{12}(\hat{t} \text{ mod}^{+} q) || \rho)$
+\Comment{$pk \coloneqq A_{k \times k} \vec{s} + \vec{e}$}
+\State $sk \coloneqq \text{Encode}_{12}(\hat{s} \text{ mod}^{+} q)$
+\Comment{$sk \coloneqq \vec{s}$}
+\State \Return $(pk,sk)$
+\end{algorithmic}
+\end{algorithm}
+\newpage
+
+\begin{algorithm}[H]
+\caption{Расшифрование}
+\textbf{Ввод:}  Приватный ключ $sk \in {\cal B}^{12 \cdot k \cdot n/8}$\\
+\textbf{Ввод:} Шифртекст  $c \in {\cal B}^{d_{\text{u}} \cdot k \cdot n/8 + d_{v} \cdot n/8}$ \\
+\textbf{Вывод:} Сообщение  $m \in \cal{B}^{32}$ 
+\begin{algorithmic}[1]
+\State \( u := \text{Decompress}_q(\text{Decode}_{d_{\text{u}}}(c), d_{\text{u}}) \)
+\State \( v := \text{Decompress}_q(\text{Decode}_{d_{\text{v}}}(c + d_{\text{u}} \cdot k \cdot n/8), d_{v}) \) 
+\State \( \hat{s} := \text{Decode}_{12}(sk) \) 
+\State \( m := \text{Encode}_{1}(\text{Compress}_q(v - \text{NTT}^{-1}(\hat{s}^T \circ \text{NTT}(u)), 1)) \) 
+\Comment{$m \coloneqq \text{Compress}_q(v-s^Tu,1)$}
+\State \Return \( m \)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Parse: ${\cal{B}}^* \rightarrow R_q$}
+\textbf{Ввод:} Поток байтов \( B = b_0, b_1, b_2, \ldots \in \cal{B}^* \)\\
+\textbf{Вывод} NTT-представление \( \hat{a} \in R_q \) of \( a \in R_q \)
+\begin{algorithmic}[1]
+\State \( i := 0 \)
+\State \( j := 0 \)
+\While{\( j < n \)}
+    \State \( d_1 := b_i + 256 \cdot (b_{i+1} \text{ mod}^{+} 16) \)
+    \State \( d_2 := \lfloor b_{i+1}/16 \rfloor + 16 \cdot b_{i+2} \)
+    \If{\( d_1 < q \)}
+        \State \( \hat{a}_j := d_1 \)
+        \State \( j := j + 1 \)
+    \EndIf
+    \If{\( d_2 < q \) and \( j < n \)}
+        \State \( \hat{a}_j := d_2 \)
+        \State \( j := j + 1 \)
+    \EndIf
+    \State \( i := i + 3 \)
+\EndWhile
+\State \Return \( \hat{a}_0 + \hat{a}_1X + \ldots + \hat{a}_{n-1}X^{n-1} \)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{$\text{CBD}_\eta: {\cal{B}}^{64n} \rightarrow R_q$}
+\textbf{Ввод:} Массив байтов $B = (b_0, b_1, \ldots, b_{64n-1}) \in {\cal{B}}^{64\eta}$\\
+\textbf{Вывод:} Многочлен \( f \in R_q \)
+\begin{algorithmic}[1]
+\State \( (\beta_0, \ldots, \beta_{512\eta-1}) := \text{БайтыВБиты}(B) \)
+\For{ $i$  from $0$ to $255$}
+    \State \( a := \sum_{j=0}^{n-1} \beta_{2i\eta+j} \)
+    \State \( b := \sum_{j=0}^{n-1} \beta_{2i\eta+n+j}\)
+    \State \( f_i := a - b \)
+\EndFor
+\State \Return \( f_0 + f_1X + f_2X^2 + \ldots + f_{255}X^{255} \)
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{$\text{Decode}_\ell: {\cal{B}}^{32\ell} \rightarrow R_q$}
+\textbf{Ввод:} Массив байтов \( B \in {\cal{B}}^{32\ell} \)\\
+\textbf{Вывод} Polynomial \( f \in R_q \)
+\begin{algorithmic}[1]
+\State \( (\beta_0, \ldots, \beta_{256\ell-1}) := \text{БайтыВБиты}(B) \)
+\For{$i$ from $0$ to $255$}
+    \State \( f_i := \sum_{j=0}^{\ell-1} \beta_{i\ell+j} 2^i \)
+\EndFor
+\State \Return \( f_0 + f_1X + f_2X^2 + \ldots + f_{255}X^{255} \)
+\end{algorithmic}
+\end{algorithm}
+\noindent
+Функция $\text{Enecode}_\ell$ определяется как инверсия функции $\text{Decode}_\ell$.
